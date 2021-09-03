@@ -66,7 +66,7 @@ let browserSyncConfig = {
 	tunnel: false
 };
 
-let isDev = false;
+let isDev = true;
 
 let webpackConfig = {
 	output: {

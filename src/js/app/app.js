@@ -1,14 +1,13 @@
 import React from 'react';
 
-class Body extends React.Component {
+class MainHeader extends React.Component {
     constructor(props) {
         super(props);
 
     }
     render() {
         return (
-            <div className="app-main">
-                <header className="app-main-header">
+            <header className="app-main-header">
                     <div className="app-main__search-container">
                         <input type="text" placeholder="Найти корабль" className="app-main__search-input" />
                     </div>
@@ -44,10 +43,56 @@ class Body extends React.Component {
                             </ul>
                         </div>
                     </div>
-                </header>
-                <div className="app-main-body">
-                    <div className="app-main__list"></div>
+        </header>
+        )
+    }
+}
+function MainBodyItem(props)  {
+    return (
+        <div className="app-main__item ship-item"
+        >
+            <div className="app-main__item-info">
+                <span>{ props.ship.nation.toUpperCase() }</span>
+                <span>/</span>
+                <span>{ props.ship.type }</span>
+            </div>
+            <div className="app-main__item-title">
+                <span>{ props.ship.level }</span>
+                <span>{ props.ship.title }</span>
+            </div>
+            <div className="app-main__ok"></div>
+        </div>
+    );
+}
+class MainBody extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        // console.log(this.props.ships)
+        let ships = [];
+        this.props.ships.forEach((ship) =>
+            ships.push(<MainBodyItem key={ ship.id } ship={ ship } />)
+        )
+        console.log(ships);
+        return (
+            <div className="app-main-body">
+                <div className="app-main__list">
+                    { ships }
                 </div>
+            </div>
+        )
+    }
+}
+class Main extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        return (
+            <div className="app-main">
+                <MainHeader/>
+                <MainBody ships={ this.props.ships }/>
             </div>
         )
     }
@@ -83,17 +128,21 @@ class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            selection : 'all',
-            tasks : this.props.tasks === null ? [] : this.props.tasks,
-            checked : [],
+            ships : props.ships,
+            filters : {
+                nation : null,
+                class : null,
+                level : null
+            },
+            search : null
         }
     }
     render() {
         return (
             <div className="app">
-                <Body
+                <Main ships={ this.state.ships }
 
-                ></Body>
+                ></Main>
                 <Results
 
                 ></Results>

@@ -15,9 +15,9 @@ fetch('/ships.json')
             for (let [key, value] of Object.entries(item) ) {
                 ship[key] = value;
                 ship['id'] = id;
-                id++;
             }
             ships.push(ship);
+            id++;
         });
         renderApp (ships);
     });

@@ -32,8 +32,13 @@ class App extends React.Component {
         object.activeFilters[filter] = value;
         this.setState(object, this.filterShips);
     }
-    handleClickItem = (event) => {
-        console.log(event.target.dataset.id);
+    handleClickItem = (id, event) => {
+        let ships = this.state.filteredShips;
+        ships[id]['added'] = !ships[id]['added'];
+        this.setState({
+            filteredShips : ships
+        });
+
     }
     filterShips = () => {
         let results = [];
@@ -74,22 +79,6 @@ class App extends React.Component {
                         pushed = true;
                     }
                 }
-
-
-                // for (let fIndex in this.state.activeFilters) {
-                //     if (fIndex === 'level') {
-                //         if (parseInt(this.state.activeFilters[fIndex]) !== this.state.ships[index][fIndex]) {
-                //             break;
-                //         }
-                //         results.push(this.state.ships[index]);
-                //     }
-                //     else {
-                //         if (this.state.activeFilters[fIndex] !== this.state.ships[index][fIndex]) {
-                //             break;
-                //         }
-                //         results.push(this.state.ships[index]);
-                //     }
-                // }
             }
         }
         else {
@@ -243,7 +232,7 @@ function MainBodyItem(props)  {
     return (
         <div
             data-id={ props.ship.id }
-            onClick={ props.handleClickItem }
+            onClick={ props.handleClickItem.bind(this, props.ship.id) }
             className={ classes } >
             <div className="app-main__item-info">
                 <span>{ props.ship.nation.toUpperCase() }</span>

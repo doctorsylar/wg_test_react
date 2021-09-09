@@ -5,7 +5,6 @@ class App extends React.Component {
         super(props);
         this.state = {
             ships : props.ships,
-            filteredShips : props.ships,
             activeFilters : {
                 nation : '',
                 type : '',
@@ -16,7 +15,7 @@ class App extends React.Component {
                 type : props.filters.type,
                 level : props.filters.level,
             },
-            results : props.results || [],
+            results : props.results || {},
             search : ''
         }
     }
@@ -34,68 +33,50 @@ class App extends React.Component {
     }
     handleClickItem = (id, event) => {
         let ships = this.state.filteredShips;
-        ships[id]['added'] = !ships[id]['added'];
+        let results = this.state.results;
+        if (ships[id]) ships[id]['added'] = !ships[id]['added'];
+        if ( ships[id]['added'] ) {
+            results[id] = ships[id]
+        }
+        else {
+            delete results[id];
+        }
         this.setState({
-            filteredShips : ships
+            filteredShips : ships,
+            results : results
         });
-
     }
     filterShips = () => {
-        let results = [];
-        let result = [];
-        if (this.state.activeFilters.nation !== '' ||
-            this.state.activeFilters.type !== '' ||
-            this.state.activeFilters.level !== '') {
-            for (let index = 0; index < this.state.ships.length; index++) {
-                let pushed = false;
-                if (this.state.activeFilters.nation !== '') {
-                    if (this.state.activeFilters.nation !== this.state.ships[index].nation) {
-                        continue;
-                    }
-                    results.push(this.state.ships[index]);
-                    pushed = true;
-                }
-                if (this.state.activeFilters.type !== '') {
-                    if (this.state.activeFilters.type !== this.state.ships[index].type) {
-                        if (pushed) {
-                            results.pop();
-                        }
-                        continue;
-                    }
-                    if (!pushed) {
-                        results.push(this.state.ships[index]);
-                        pushed = true;
-                    }
-                }
-                if (this.state.activeFilters.level !== '') {
-                    if (parseInt(this.state.activeFilters.level) !== this.state.ships[index].level) {
-                        if (pushed) {
-                            results.pop();
-                        }
-                        continue;
-                    }
-                    if (!pushed) {
-                        results.push(this.state.ships[index]);
-                        pushed = true;
-                    }
+        let results = this.state.ships.map((ship) => {
+            if (this.state.activeFilters.nation !== '') {
+                if (this.state.activeFilters.nation !== ship.nation) {
+                    ship['hidden'] = true;
+                    return ship;
                 }
             }
-        }
-        else {
-            results = this.state.ships;
-        }
-        if (this.state.search !== '') {
-            for (let index = 0; index < results.length; index++) {
-                if (results[index]['title'].toLowerCase().indexOf(this.state.search.toLowerCase()) !== -1) {
-                    result.push(results[index]);
+            if (this.state.activeFilters.type !== '') {
+                if (this.state.activeFilters.type !== ship.type) {
+                    ship['hidden'] = true;
+                    return ship;
                 }
             }
-        }
-        else {
-            result = results;
-        }
+            if (this.state.activeFilters.level !== '') {
+                if (parseInt(this.state.activeFilters.level) !== ship.level) {
+                    ship['hidden'] = true;
+                    return ship;
+                }
+            }
+            if (this.state.search !== '') {
+                if (ship['title'].toLowerCase().indexOf(this.state.search.toLowerCase()) === -1) {
+                    ship['hidden'] = true;
+                    return ship;
+                }
+            }
+            ship['hidden'] = false;
+            return ship;
+        });
         this.setState({
-            filteredShips: result
+            ships: results
         });
     }
     render() {
@@ -105,13 +86,14 @@ class App extends React.Component {
                     search={ this.state.search }
                     changeSearch={ this.changeSearch }
                     changeFilter={ this.changeFilter }
-                    ships={ this.state.filteredShips }
+                    ships={ this.state.ships }
                     filters={ this.state.filters }
                     activeFilters={ this.state.activeFilters }
                     handleClickItem={ this.handleClickItem }
                 ></Main>
                 <Results
-
+                    results={ this.state.results }
+                    handleClickItem={ this.handleClickItem }
                 ></Results>
             </div>
         );
@@ -134,7 +116,7 @@ class Main extends React.Component {
                 />
                 <MainBody
                     handleClickItem={ this.props.handleClickItem }
-                    ships={ this.props.ships }/>
+                    ships={ this.props.ships } />
             </div>
         )
     }
@@ -204,13 +186,14 @@ class MainBody extends React.Component {
         super(props);
     }
     render() {
-        // console.log(this.props.ships)
         let ships = [];
-        this.props.ships.forEach((ship) =>
-            ships.push(
-                <MainBodyItem handleClickItem={ this.props.handleClickItem }
-                key={ ship.id } ship={ ship } />)
-        )
+        this.props.ships.forEach((ship) => {
+            if (!ship.hidden) {
+                ships.push(
+                    <MainBodyItem handleClickItem={this.props.handleClickItem}
+                                  key={ship.id} ship={ship}/>)
+            }
+        })
         return (
             <div className="app-main-body">
                 <div className="app-main__list">
@@ -231,7 +214,6 @@ function MainBodyItem(props)  {
     }
     return (
         <div
-            data-id={ props.ship.id }
             onClick={ props.handleClickItem.bind(this, props.ship.id) }
             className={ classes } >
             <div className="app-main__item-info">
@@ -254,12 +236,31 @@ class Results extends React.Component {
 
     }
     render() {
+        let results = [];
+        for (let id of Object.keys(this.props.results)) {
+            results.push(
+                <div
+                    onClick={ this.props.handleClickItem.bind(this, id) }
+                    key={ id } className="app-results__item ship-item" >
+                    <div className="app-results__item-info">
+                        <span>{ this.props.results[id].nation.toUpperCase() }</span>
+                        <span>/</span>
+                        <span>{ this.props.results[id].type }</span>
+                    </div>
+                    <div className="app-results__item-title">
+                        <span>{ this.props.results[id].level } </span>
+                        <span>{ this.props.results[id].title }</span>
+                    </div>
+                    <div className="app-results__remove"></div>
+                </div>
+            )
+        }
         return (
             <div className="app-results-container">
                 <div className="app-results">
                     <p className="app-results__heading">Выбранные корабли:</p>
                     <div className="app-results-list">
-
+                        { results }
                     </div>
                     <div className="app-results__bottom">
                         <p>Сумма уровней: <span className="app-results__sum">0</span></p>

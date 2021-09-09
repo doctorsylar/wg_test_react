@@ -4,7 +4,7 @@ import TodoApp from './app/app';
 
 let ships = [];
 
-fetch('/ships.json')
+fetch('./ships.json')
     .then((response) => {
         return response.json();
     })

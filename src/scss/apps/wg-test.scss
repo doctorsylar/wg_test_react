@@ -57,6 +57,17 @@ body {
   margin-top: 16px;
   display: flex;
   justify-content: space-between;
+  select {
+    width: 32%;
+    cursor: pointer;
+    border-radius: 0;
+    border: none;
+    background-color: #62aeff;
+    padding: 6px 10px;
+  }
+  option {
+    cursor: pointer;
+  }
 }
 .app-main__filter {
   width: 32%;

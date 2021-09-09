@@ -6,10 +6,15 @@ class App extends React.Component {
         this.state = {
             ships : props.ships,
             filteredShips : props.ships,
+            activeFilters : {
+                nation : '',
+                type : '',
+                level : ''
+            },
             filters : {
-                nation : null,
-                class : null,
-                level : null
+                nation : props.filters.nation,
+                type : props.filters.type,
+                level : props.filters.level,
             },
             results : props.results || [],
             search : ''
@@ -20,22 +25,71 @@ class App extends React.Component {
             search: value
         }, this.filterShips);
     }
-    changeFilter = (value) => {
-        // this.setState({
-        //     input: value
-        // });
+    changeFilter = (filter, value) => {
+        let object = {
+            activeFilters: this.state.activeFilters
+        }
+        object.activeFilters[filter] = value;
+        this.setState(object, this.filterShips);
+    }
+    handleClickItem = (event) => {
+        console.log(event.target.dataset.id);
     }
     filterShips = () => {
         let results = [];
         let result = [];
-        if (this.state.filters.nation !== null || this.state.filters.class !== null || this.state.filters.level !== null) {
+        if (this.state.activeFilters.nation !== '' ||
+            this.state.activeFilters.type !== '' ||
+            this.state.activeFilters.level !== '') {
             for (let index = 0; index < this.state.ships.length; index++) {
-                for (let fIndex in this.state.filters) {
-                    if (this.state.filters[fIndex] !== this.state.ships[index][fIndex]) {
-                        break;
+                let pushed = false;
+                if (this.state.activeFilters.nation !== '') {
+                    if (this.state.activeFilters.nation !== this.state.ships[index].nation) {
+                        continue;
                     }
                     results.push(this.state.ships[index]);
+                    pushed = true;
                 }
+                if (this.state.activeFilters.type !== '') {
+                    if (this.state.activeFilters.type !== this.state.ships[index].type) {
+                        if (pushed) {
+                            results.pop();
+                        }
+                        continue;
+                    }
+                    if (!pushed) {
+                        results.push(this.state.ships[index]);
+                        pushed = true;
+                    }
+                }
+                if (this.state.activeFilters.level !== '') {
+                    if (parseInt(this.state.activeFilters.level) !== this.state.ships[index].level) {
+                        if (pushed) {
+                            results.pop();
+                        }
+                        continue;
+                    }
+                    if (!pushed) {
+                        results.push(this.state.ships[index]);
+                        pushed = true;
+                    }
+                }
+
+
+                // for (let fIndex in this.state.activeFilters) {
+                //     if (fIndex === 'level') {
+                //         if (parseInt(this.state.activeFilters[fIndex]) !== this.state.ships[index][fIndex]) {
+                //             break;
+                //         }
+                //         results.push(this.state.ships[index]);
+                //     }
+                //     else {
+                //         if (this.state.activeFilters[fIndex] !== this.state.ships[index][fIndex]) {
+                //             break;
+                //         }
+                //         results.push(this.state.ships[index]);
+                //     }
+                // }
             }
         }
         else {
@@ -63,7 +117,9 @@ class App extends React.Component {
                     changeSearch={ this.changeSearch }
                     changeFilter={ this.changeFilter }
                     ships={ this.state.filteredShips }
-
+                    filters={ this.state.filters }
+                    activeFilters={ this.state.activeFilters }
+                    handleClickItem={ this.handleClickItem }
                 ></Main>
                 <Results
 
@@ -82,8 +138,14 @@ class Main extends React.Component {
             <div className="app-main">
                 <MainHeader
                     search={ this.props.search }
-                    changeSearch={ this.props.changeSearch }/>
-                <MainBody ships={ this.props.ships }/>
+                    changeSearch={ this.props.changeSearch }
+                    changeFilter={ this.props.changeFilter }
+                    filters={ this.props.filters }
+                    activeFilters={ this.props.activeFilters }
+                />
+                <MainBody
+                    handleClickItem={ this.props.handleClickItem }
+                    ships={ this.props.ships }/>
             </div>
         )
     }
@@ -96,7 +158,34 @@ class MainHeader extends React.Component {
     changeInput = (event) => {
         this.props.changeSearch(event.target.value);
     }
+    handleFilterChange = (event) => {
+        this.props.changeFilter(event.target.name, event.target.value);
+    }
     render() {
+        let filters = {
+            nation : [],
+            type : [],
+            level : [],
+        }
+        for (let index in this.props.filters) {
+            this.props.filters[index].forEach((filter) =>
+                filters[index].push(
+                    <option
+                            key={ filter } value={ filter }>
+                        { filter }
+                    </option>
+                )
+            )
+        }
+        filters['nation'].unshift(
+            <option key='Нация' value=''>Нация</option>
+        )
+        filters['type'].unshift(
+            <option key='Класс' value=''>Класс</option>
+        )
+        filters['level'].unshift(
+            <option key='Уровень' value=''>Уровень</option>
+        )
         return (
             <header className="app-main-header">
                 <div className="app-main__search-container">
@@ -106,36 +195,15 @@ class MainHeader extends React.Component {
                         type="text" placeholder="Найти корабль" className="app-main__search-input" />
                 </div>
                 <div className="app-main__filters-container">
-                    <div className="app-main__filter filter-nation">
-                        <div className="app-main__filter-current" data-value="null">
-                            Нация
-                        </div>
-                        <ul className="app-main__filter-list">
-                            <li className="app-main__filter-item" data-value="null">
-                                Нация
-                            </li>
-                        </ul>
-                    </div>
-                    <div className="app-main__filter filter-type">
-                        <div className="app-main__filter-current" data-value="null">
-                            Класс
-                        </div>
-                        <ul className="app-main__filter-list">
-                            <li className="app-main__filter-item" data-value="null">
-                                Класс
-                            </li>
-                        </ul>
-                    </div>
-                    <div className="app-main__filter filter-level">
-                        <div className="app-main__filter-current" data-value="null">
-                            Уровень
-                        </div>
-                        <ul className="app-main__filter-list">
-                            <li className="app-main__filter-item" data-value="null">
-                                Уровень
-                            </li>
-                        </ul>
-                    </div>
+                    <select value={ this.props.activeFilters.nation } name={ 'nation' } onChange={ this.handleFilterChange }>
+                        { filters.nation }
+                    </select>
+                    <select value={ this.props.activeFilters.type } name={ 'type' } onChange={ this.handleFilterChange }>
+                        { filters.type }
+                    </select>
+                    <select value={ this.props.activeFilters.level } name={ 'level' } onChange={ this.handleFilterChange }>
+                        { filters.level }
+                    </select>
                 </div>
             </header>
         )
@@ -150,7 +218,9 @@ class MainBody extends React.Component {
         // console.log(this.props.ships)
         let ships = [];
         this.props.ships.forEach((ship) =>
-            ships.push(<MainBodyItem key={ ship.id } ship={ ship } />)
+            ships.push(
+                <MainBodyItem handleClickItem={ this.props.handleClickItem }
+                key={ ship.id } ship={ ship } />)
         )
         return (
             <div className="app-main-body">
@@ -163,9 +233,18 @@ class MainBody extends React.Component {
 }
 
 function MainBodyItem(props)  {
+    let classes = '';
+    if (props.ship['added']) {
+        classes = 'app-main__item ship-item active';
+    }
+    else {
+        classes = 'app-main__item ship-item';
+    }
     return (
-        <div className="app-main__item ship-item"
-        >
+        <div
+            data-id={ props.ship.id }
+            onClick={ props.handleClickItem }
+            className={ classes } >
             <div className="app-main__item-info">
                 <span>{ props.ship.nation.toUpperCase() }</span>
                 <span>/</span>
@@ -206,6 +285,5 @@ class Results extends React.Component {
         )
     }
 }
-
 
 export default App;

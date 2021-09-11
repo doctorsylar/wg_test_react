@@ -32,7 +32,7 @@ class App extends React.Component {
         this.setState(object, this.filterShips);
     }
     handleClickItem = (id, event) => {
-        let ships = this.state.filteredShips;
+        let ships = this.state.ships;
         let results = this.state.results;
         if (ships[id]) ships[id]['added'] = !ships[id]['added'];
         if ( ships[id]['added'] ) {
@@ -42,7 +42,7 @@ class App extends React.Component {
             delete results[id];
         }
         this.setState({
-            filteredShips : ships,
+            ships : ships,
             results : results
         });
     }
@@ -79,7 +79,15 @@ class App extends React.Component {
             ships: results
         });
     }
+    countResultsLevels = () => {
+        let result = 0;
+        for (let ship of Object.keys(this.state.results)) {
+            if (this.state.results[ship]) result += parseInt(this.state.results[ship].level);
+        }
+        return result;
+    }
     render() {
+        let sum = this.countResultsLevels();
         return (
             <div className="app">
                 <Main
@@ -90,10 +98,12 @@ class App extends React.Component {
                     filters={ this.state.filters }
                     activeFilters={ this.state.activeFilters }
                     handleClickItem={ this.handleClickItem }
+                    sum={ sum }
                 ></Main>
                 <Results
                     results={ this.state.results }
                     handleClickItem={ this.handleClickItem }
+                    sum={ sum }
                 ></Results>
             </div>
         );
@@ -116,6 +126,7 @@ class Main extends React.Component {
                 />
                 <MainBody
                     handleClickItem={ this.props.handleClickItem }
+                    sum={ this.props.sum }
                     ships={ this.props.ships } />
             </div>
         )
@@ -185,12 +196,17 @@ class MainBody extends React.Component {
     constructor(props) {
         super(props);
     }
+    handleClickItem = (id, event) => {
+        if (this.props.sum + this.props.ships[id].level <= 42 || this.props.ships[id].added) {
+            this.props.handleClickItem(id, event);
+        }
+    }
     render() {
         let ships = [];
         this.props.ships.forEach((ship) => {
             if (!ship.hidden) {
                 ships.push(
-                    <MainBodyItem handleClickItem={this.props.handleClickItem}
+                    <MainBodyItem handleClickItem={ this.handleClickItem }
                                   key={ship.id} ship={ship}/>)
             }
         })
@@ -263,7 +279,7 @@ class Results extends React.Component {
                         { results }
                     </div>
                     <div className="app-results__bottom">
-                        <p>Сумма уровней: <span className="app-results__sum">0</span></p>
+                        <p>Сумма уровней: <span className="app-results__sum">{ this.props.sum }</span></p>
                     </div>
                     <button type="button" className="app-results__copy">Поделиться</button>
                     <div className="app-results__input-container">
